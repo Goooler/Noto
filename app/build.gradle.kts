@@ -32,8 +32,8 @@ android {
         }
     }
 
-    signingConfigs {
-        create("release") {
+    val releaseSigning = try {
+        signingConfigs.create("release") {
             val properties = Properties().apply {
                 load(project.rootProject.file("local.properties").inputStream())
             }
@@ -42,13 +42,15 @@ android {
             keyAlias = properties["key.alias"] as String
             keyPassword = properties["key.password"] as String
         }
+    } catch (_: Exception) {
+        signingConfigs["debug"]
     }
 
     buildTypes {
         getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = releaseSigning
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -58,6 +60,7 @@ android {
         getByName("debug") {
             versionNameSuffix = "-debug"
             applicationIdSuffix = ".debug"
+            signingConfig = releaseSigning
             isDebuggable = true
         }
 
